@@ -18,7 +18,7 @@ c : 20007 : Witch   : Morgana:10001 : 10 : 15 : 0
 //    t:<index>:<type>:<creature>:<weight>:<value>
 // creature = 0 means noone is carrying that treasure at the moment
 t : 30001 : Gold : 20004 : 50 : 2000
-t : 30002 : Gold :     0 : 75 : 5000
+t : 30002 : Gold : 20001 : 75 : 5000
 t : 30003 : Gems : 20002 : 10 : 10000
 t : 30004 : Silver : 20005 : 120 : 1000
 
