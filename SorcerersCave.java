@@ -1,10 +1,12 @@
 package sorcererscave;
 
 // File: SorcerersCave.java
-// Date: July 13, 2014
-// Author: Jessica Cassidy
-// Purpose: demonstrate the development of a project - 
-//    in this case, the Sorcerer's Cave project 3.
+// Original Program Date: July 13, 2014
+// Revision 1 - McCarthy - 2/21/2015
+// Original Author: Jessica Cassidy
+// Revision 1 Author: T.C. McCarthy
+// Revised the readFile() method to include IO Exceptions for incorrect
+// input.
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,6 +14,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import java.util.Scanner;
@@ -28,6 +32,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
@@ -66,21 +72,21 @@ public class SorcerersCave extends JFrame {
         
         jtf = new JTextField (10);
         
-        jcb = new JComboBox <String> ();
+        jcb = new JComboBox <> ();
         jcb.addItem ("Index");
         jcb.addItem ("Type");
         jcb.addItem ("Name");
         
         JLabel jlSortCreature = new JLabel ("Sort creatures by:");
         
-        jcbSortCreature = new JComboBox<String>();
+        jcbSortCreature = new JComboBox<>();
         jcbSortCreature.addItem("Empathy");
         jcbSortCreature.addItem("Fear");
         jcbSortCreature.addItem("Carrying Capacity");
         
         JLabel jlSortTreasure = new JLabel ("Sort treasures by:");
         
-        jcbSortTreasure = new JComboBox<String>();
+        jcbSortTreasure = new JComboBox<>();
         jcbSortTreasure.addItem("Weight");
         jcbSortTreasure.addItem("Value");   
         
@@ -105,13 +111,18 @@ public class SorcerersCave extends JFrame {
         validate();
         
         jbr.addActionListener ( new ActionListener () {
+                @Override
                 public void actionPerformed (ActionEvent e) {
-                    readFile ();
-                } // end required method
-            } // end local definition of inner class
+                    try {
+                        readFile ();
+                    } catch (IOException ex) {
+                        Logger.getLogger(SorcerersCave.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }            } // end local definition of inner class
         ); // the anonymous inner class
         
         jbd.addActionListener ( new ActionListener () {
+                @Override
                 public void actionPerformed (ActionEvent e) {
                     displayCave ();
                 } // end required meth0d
@@ -119,6 +130,7 @@ public class SorcerersCave extends JFrame {
         ); // the anonymous inner class
         
         jbs.addActionListener ( new ActionListener () {
+                @Override
                 public void actionPerformed (ActionEvent e) {
                     search ((String)(jcb.getSelectedItem()), jtf.getText());
                 } // end required method
@@ -126,6 +138,7 @@ public class SorcerersCave extends JFrame {
         ); // the anonymous inner class
         
         jbCreatureSort.addActionListener ( new ActionListener() {
+                @Override
                 public void actionPerformed (ActionEvent e) {
                     sortCreatures ((String) (jcbSortCreature.getSelectedItem()));
                 } 
@@ -133,6 +146,7 @@ public class SorcerersCave extends JFrame {
         ); 
         
         jbTreasureSort.addActionListener( new ActionListener () {
+                @Override
                 public void actionPerformed (ActionEvent e) {
                     sortTreasures ((String) (jcbSortTreasure.getSelectedItem()));
                 }
@@ -151,10 +165,11 @@ public class SorcerersCave extends JFrame {
     
     } // end no-parameter constructor
     
-    public void readFile () {
+    //McCarthy revised this method to include IO Exceptions
+    public void readFile () throws IOException {
         
-        HashMap <Integer, Party> hmParties = new HashMap <Integer, Party> ();
-        HashMap <Integer, Creature> hmCreatures = new HashMap <Integer, Creature> ();
+        HashMap <Integer, Party> hmParties = new HashMap <> ();
+        HashMap <Integer, Creature> hmCreatures = new HashMap <> ();
 
         JFileChooser jfc = new JFileChooser(".");
         int returnVal = jfc.showOpenDialog(null);
@@ -167,25 +182,116 @@ public class SorcerersCave extends JFrame {
             System.exit(0);
         }
         // open and read file
-          try {
+          try {            
+              FileReader fr = null;//McCarthy added this to print file contents
               Scanner scan = new Scanner(jfc.getSelectedFile());
               while (scan.hasNextLine()) {
               String line = scan.nextLine();
               if (line.length() == 0) continue;
-              Scanner sLine = new Scanner (line).useDelimiter("\\s*:\\s*");
-              switch (line.charAt(0)){
-                  case 'p':
+              Scanner sLine = new Scanner (line).useDelimiter("\\s*:\\s*");              
+              // McCarthy added below if structure to check that 
+              // lines start with the correct characters and added an
+              // IO Exception that prints file and the line where error occurs
+              if (line.charAt(0)=='p'||line.charAt(0)=='c'
+                      ||line.charAt(0)=='t'||line.charAt(0)=='a'||
+                      line.charAt(0)=='j'||line.charAt(0)=='/'||line.isEmpty()) {
+              switch (line.charAt(0)){                 
+                  case 'p': 
+                      // McCarthy added below if structure to check that 
+                      // lines start with the correct parties and added an
+                      // IO Exception that prints file and the line where error occurs
+                      if (!line.contains("Unity")&&!line.contains("Assemblage")
+                              &&!line.contains("Conglomeration")){  
+                          fr = new FileReader (jfc.getSelectedFile());
+                          int inChar;
+                          while ( (inChar = fr.read()) != -1 ) {
+                              System.out.printf ("%c", inChar);
+                          }
+                          throw new IOException("There was an error in the file, at this line: "
+                                  + line.toString() + "an invalid party name found." );                         
+                              }
                   case 'P': addParty(sLine, hmParties); break;
                   case 'c':
+                      // McCarthy added below if structure to check that 
+                      // lines cotnain the correct creatures and added an
+                      // IO Exception that prints file and the line where error occurs
+                      if (!line.contains("Woman")&&!line.contains("Man")
+                              &&!line.contains("Troll")&&!line.contains("Warlock")
+                              &&!line.contains("Witch")){
+                          fr = new FileReader (jfc.getSelectedFile());
+                          int inChar;
+                          while ( (inChar = fr.read()) != -1 ) {
+                              System.out.printf ("%c", inChar);
+                          }
+                          throw new IOException("There was an error in the file, at this line: "
+                                  + line.toString() + "an invalid creature type found." ); 
+                              }
                   case 'C': addCreature (sLine, hmParties, hmCreatures); break;
                   case 't':
+                      // McCarthy added below if structure to check that 
+                      // lines contain the correct treasures and added an
+                      // IO Exception that prints file and the line where error occurs
+                      if (!line.contains("Gold")&&!line.contains("Gems")
+                              &&!line.contains("Silver")){
+                         fr = new FileReader (jfc.getSelectedFile());
+                          int inChar;
+                          while ( (inChar = fr.read()) != -1 ) {
+                              System.out.printf ("%c", inChar);
+                          }
+                          throw new IOException("There was an error in the file, at this line: "
+                                  + line.toString() + "an invalid treaure type was found." ); 
+                              }
                   case 'T': addTreasure (sLine, hmCreatures); break;
                   case 'a':
+                      // McCarthy added below if structure to check that 
+                      // lines start with the correct artifacts and added an
+                      // IO Exception that prints file and the line where error occurs
+                      if (!line.contains("Wand")&&!line.contains("Potion")
+                              &&!line.contains("Stone")&&!line.contains("Scroll")){
+                          fr = new FileReader (jfc.getSelectedFile());
+                          int inChar;
+                          while ( (inChar = fr.read()) != -1 ) {
+                              System.out.printf ("%c", inChar);
+                          }
+                          throw new IOException("There was an error in the file, at this line: "
+                                  + line.toString() + "an invalid artifact type was found." ); 
+                              }
                   case 'A': addArtifact (sLine, hmParties, hmCreatures); break;   
                   case 'j':
-                  case 'J': addJob (sLine, hmParties, hmCreatures); break;                      
+                      // McCarthy added below if structure to check that 
+                      // lines contain the correct jobs and added an
+                      // IO Exception that prints file and the line where error occurs
+                      if (!line.contains("Heal Troll")&&!line.contains("Strike Now")
+                              &&!line.contains("Read Mind")&&!line.contains("Will Two")
+                              &&!line.contains("Zero All")&&!line.contains("Find Keys")
+                              &&!line.contains("Call Home")&&!line.contains("Sleep")
+                              &&!line.contains("Wake")&&!line.contains("compete")){
+                             fr = new FileReader (jfc.getSelectedFile());
+                          int inChar;
+                          while ( (inChar = fr.read()) != -1 ) {
+                              System.out.printf ("%c", inChar);
+                          }
+                          throw new IOException("There was an error in the file, at this line: "
+                                  + line.toString() + "an invalid job type was found." ); 
+                              }
+                  case 'J': addJob (sLine, hmParties, hmCreatures); break;       
               } // end switch structure
-            } // end while loop     
+              
+              } // end McCarthy's if structure 
+              // McCarthy added below else structure to add an
+              // IO Exception that prints file and the line where error occurs
+              else{
+                  fr = new FileReader (jfc.getSelectedFile());
+                  int inChar;
+                  while ( (inChar = fr.read()) != -1 ) {
+                      System.out.printf ("%c", inChar);
+                  }
+                  throw new IOException("There was an error in the file "
+                          + "input - leading character in this line: " + line.toString()
+                          + " - is illegal; only p, c, t, or a can be used to"
+                          + " start a data line");}
+              }// end while loop 
+             
               JTree jtree = new JTree(cave);
                   } // end try
           catch(FileNotFoundException e) {
